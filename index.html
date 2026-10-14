@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>¿Todo bien? — Autochequeo breve</title>
+<style>
+  :root{
+    --red:#E30613;
+    --navy:#032B4A;
+    --bg:#f6f7f8;
+    --card:#ffffff;
+    --muted:#66717d;
+    --line:#dfe3e6;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#1b2430}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 16px 48px}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:24px}
+  .cross{width:18px;height:18px;position:relative;display:inline-block}
+  .cross:before,.cross:after{content:"";position:absolute;background:var(--red);left:0;top:0}
+  .cross:before{width:18px;height:6px;top:6px}
+  .cross:after{width:6px;height:18px;left:6px}
+  .brand span{font-weight:700;color:#222}
+  h1{color:var(--navy);font-size:36px;margin:0 0 8px;line-height:1.05}
+  .sub{font-size:18px;color:var(--muted);margin:0 0 22px}
+  .notice{background:#fff;border-left:5px solid var(--red);padding:14px 16px;border-radius:8px;margin:16px 0 24px;line-height:1.45}
+  .question{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin:14px 0}
+  .qtext{font-size:18px;line-height:1.35;margin-bottom:12px}
+  .opts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  label.opt{border:1px solid var(--line);border-radius:8px;padding:10px 8px;text-align:center;cursor:pointer;font-size:14px;background:#fff}
+  label.opt:hover{border-color:#9ba6b0}
+  input[type=radio]{display:none}
+  input[type=radio]:checked + span{display:block;background:var(--navy);color:#fff;border-radius:6px;padding:7px 4px;margin:-7px -4px}
+  .finalq{background:#eef3f7;border-radius:12px;padding:18px;margin-top:18px}
+  .btn{margin-top:22px;width:100%;border:none;border-radius:10px;padding:14px 18px;font-size:18px;font-weight:700;cursor:pointer;background:var(--red);color:#fff}
+  .btn.secondary{background:var(--navy);margin-top:10px}
+  #result{display:none;margin-top:24px}
+  .result-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px}
+  .result-card h2{margin-top:0;color:var(--navy)}
+  .domains{display:grid;grid-template-columns:1fr;gap:12px;margin:16px 0}
+  .domain{padding:14px;border-radius:10px;background:#f7f8f9;border:1px solid var(--line)}
+  .domain strong{display:block;margin-bottom:6px;color:var(--navy)}
+  .prompt{font-size:22px;line-height:1.35;color:var(--navy);border-left:5px solid var(--red);padding-left:14px;margin:18px 0}
+  .reflection{margin-top:18px;padding:16px;border-radius:10px;background:#fff7f7;border:1px solid #f1c7c7;line-height:1.5}
+  .privacy{margin-top:18px;color:var(--muted);font-size:13px;line-height:1.4}
+  @media (max-width:600px){h1{font-size:30px}.opts{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><span class="cross"></span><span>Cruz Roja</span></div>
+  <h1>¿Todo bien?</h1>
+  <p class="sub">Un autochequeo breve para mirar cómo estás trabajando antes de que algo tenga que romperse para que lo mires.</p>
+  <div class="notice"><strong>No es un test clínico ni una herramienta diagnóstica.</strong><br>No busca decirte si “estás bien o mal”. Solo ayudarte a detectar qué cosas puedes estar normalizando sin darte cuenta.</div>
+  <form id="quiz">
+    <div id="questions"></div>
+    <div class="finalq">
+      <div class="qtext"><strong>Si nada cambiara en mi forma actual de trabajar, ¿me parecería sostenible seguir así dentro de dos años?</strong></div>
+      <div class="opts" style="grid-template-columns:1fr 1fr">
+        <label class="opt"><input type="radio" name="sostenibilidad" value="1"><span>Sí</span></label>
+        <label class="opt"><input type="radio" name="sostenibilidad" value="0"><span>No / no estoy seguro/a</span></label>
+      </div>
+    </div>
+    <button type="button" class="btn" onclick="showResult()">Ver mi reflexión</button>
+  </form>
+  <section id="result">
+    <div class="result-card">
+      <h2>Tu resultado no es una puntuación</h2>
+      <p>Fíjate en las respuestas que te han hecho dudar o pensar. Ahí suele estar lo más interesante.</p>
+      <div class="domains">
+        <div class="domain"><strong>Desconexión</strong><span id="d1"></span></div>
+        <div class="domain"><strong>Presencia y margen</strong><span id="d2"></span></div>
+        <div class="domain"><strong>Recuperación</strong><span id="d3"></span></div>
+        <div class="domain"><strong>Control y límites</strong><span id="d4"></span></div>
+      </div>
+      <div class="prompt" id="closing"></div>
+      <div class="reflection"><strong>Ahora mira tus respuestas y pregúntate:</strong><br><br>¿Qué estoy normalizando?<br>¿Qué de esto puedo modificar yo y qué necesita cambiar en mi forma de trabajar o en mi organización?</div>
+      <button class="btn secondary" onclick="location.reload()">Volver a empezar</button>
+      <div class="privacy">Las respuestas se procesan únicamente en este dispositivo. Esta página no envía ni guarda tus respuestas.</div>
+    </div>
+  </section>
+</div>
+<script>
+const items = [
+  ["Antes de que empiece formalmente mi jornada, ya estoy mirando correo, mensajes o asuntos de trabajo.", "det"],
+  ["Cuando termino de trabajar, me cuesta dejar de repasar conversaciones, decisiones o problemas pendientes.", "det"],
+  ["He normalizado comer, hacer pausas o descansar mientras sigo trabajando.", "rec"],
+  ["Necesito más esfuerzo que antes para mantener el mismo nivel de funcionamiento.", "rec"],
+  ["Noto menos paciencia o menos margen ante pequeñas dificultades, interrupciones o repeticiones.", "pres"],
+  ["Estoy físicamente con otras personas, pero parte de mi atención sigue en el trabajo.", "pres"],
+  ["Al terminar el día, tengo la sensación de haber parado de trabajar, pero no necesariamente de haber recuperado.", "rec"],
+  ["Tengo la sensación de que demasiadas cosas dependen de mí.", "ctrl"],
+  ["Me cuesta poner límites, aplazar algo o decir “esto puede esperar” cuando aparecen nuevas demandas.", "ctrl"],
+  ["Tengo espacios o personas con quienes puedo reconocer que no llego, que necesito ayuda o que no sé algo.", "support"]
+];
+const scale = ["Nunca o casi nunca","Algunas veces","A menudo","Casi siempre"];
+const container = document.getElementById("questions");
+items.forEach((it, i) => {
+  const div = document.createElement("div");
+  div.className = "question";
+  div.innerHTML = `<div class="qtext">${i+1}. ${it[0]}</div><div class="opts">${scale.map((s,j)=>`<label class="opt"><input type="radio" name="q${i}" value="${j}"><span>${s}</span></label>`).join("")}</div>`;
+  container.appendChild(div);
+});
+function showResult(){
+  for(let i=0;i<items.length;i++){if(!document.querySelector(`input[name="q${i}"]:checked`)){alert("Responde todas las preguntas antes de continuar.");return;}}
+  if(!document.querySelector('input[name="sostenibilidad"]:checked')){alert("Responde también la última pregunta.");return;}
+  const vals = items.map((it,i)=>parseInt(document.querySelector(`input[name="q${i}"]:checked`).value));
+  const groups = {det:[], pres:[], rec:[], ctrl:[]};
+  items.forEach((it,i)=>{if(it[1]==="det") groups.det.push(vals[i]);if(it[1]==="pres") groups.pres.push(vals[i]);if(it[1]==="rec") groups.rec.push(vals[i]);if(it[1]==="ctrl") groups.ctrl.push(vals[i]);});
+  groups.ctrl.push(3 - vals[9]);
+  function textFor(arr){const avg = arr.reduce((a,b)=>a+b,0)/arr.length;if(avg < 1.0) return "En este momento este aspecto parece aparecer poco.";if(avg < 2.0) return "Hay algunas señales ocasionales que quizá merezca la pena observar.";return "Este aspecto aparece con bastante frecuencia. Puede ser útil preguntarte qué estás normalizando y qué necesitaría cambiar.";}
+  document.getElementById("d1").textContent = textFor(groups.det);
+  document.getElementById("d2").textContent = textFor(groups.pres);
+  document.getElementById("d3").textContent = textFor(groups.rec);
+  document.getElementById("d4").textContent = textFor(groups.ctrl);
+  const sust = document.querySelector('input[name="sostenibilidad"]:checked').value;
+  const highItems = vals.slice(0,9).filter(v=>v>=2).length + ((3-vals[9])>=2 ? 1 : 0);
+  let close = "¿Qué respuesta te ha hecho pensar más?";
+  if(sust==="0") close = "Si no te parece sostenible seguir igual durante dos años, quizá la pregunta no sea cuánto más puedes aguantar, sino qué conviene modificar antes.";
+  else if(highItems>=4) close = "Aunque todo siga funcionando, quizá haya varias cosas que ya se han vuelto demasiado normales. ¿Cuál sería la primera que merecería tu atención?";
+  else close = "No hace falta estar mal para empezar a cuidarse. ¿Qué pequeño ajuste te ayudaría a trabajar de una forma más sostenible?";
+  document.getElementById("closing").textContent = close;
+  document.getElementById("quiz").style.display="none";
+  document.getElementById("result").style.display="block";
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+</script>
+</body>
+</html>
